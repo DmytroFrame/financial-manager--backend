@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateBankDto } from './dto/create-bank.dto';
@@ -25,7 +25,11 @@ export class BanksService {
         return this.update(id, payload);
     }
 
-    remove(id: string) {
-        return this.bankRepository.delete(id);
+    async remove(id: string) {
+        try {
+            return await this.bankRepository.delete(id);
+        } catch (error) {
+            throw new ConflictException(error.toString());
+        }
     }
 }

@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryEntity } from './entities/category.entity';
@@ -16,8 +16,8 @@ export class CategoriesService {
         return this.categoryRepository.save(payload);
     }
 
-    findAll() {
-        return this.categoryRepository.find();
+    findAll(options?: FindManyOptions<CategoryEntity>) {
+        return this.categoryRepository.find(options);
     }
 
     findOne(id: string) {
@@ -28,7 +28,11 @@ export class CategoriesService {
         return this.categoryRepository.update(id, payload);
     }
 
-    remove(id: string) {
-        return this.categoryRepository.delete(id);
+    async remove(id: string) {
+        try {
+            return await this.categoryRepository.delete(id);
+        } catch (error) {
+            throw new ConflictException(error.toString());
+        }
     }
 }
