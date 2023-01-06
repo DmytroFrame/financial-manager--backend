@@ -5,6 +5,7 @@ import { BanksService } from '../banks/banks.service';
 import { WebhookKeysService } from '../webhook-keys/webhook-keys.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { TransactionEntity } from './entities/transaction.entity';
+import { TransactionType } from './enums/transaction-type.enum';
 import { ITransactionKeyResult } from './interfaces/transaction-key-result.interface';
 
 @Injectable()
@@ -26,6 +27,7 @@ export class TransactionsService {
         const keyResult = await this.webhookKeysService.get<ITransactionKeyResult>(key);
         if (!keyResult) throw new ConflictException('invalid key');
 
+        this.changeBankBalance(keyResult.bankId, payload.amount, payload.type);
         payload['categories'] = payload.categoryIds.map((id) => ({ id }));
         return this.transactionRepository.save({ bankId: keyResult.bankId, ...payload });
     }
@@ -38,7 +40,20 @@ export class TransactionsService {
         return this.transactionRepository.findOneBy({ id });
     }
 
-    remove(id: string) {
+    async remove(id: string) {
+        let { bankId, amount, type } = await this.findOne(id);
+        type === TransactionType.Profitable ? TransactionType.Consumable : TransactionType.Profitable;
+        this.changeBankBalance(bankId, amount, type);
         return this.transactionRepository.delete(id);
+    }
+
+    private async changeBankBalance(bankId: string, amount: number, type: TransactionType) {
+        let { balance } = await this.banksService.findOne(bankId);
+        if (type === TransactionType.Profitable) {
+            balance = balance + amount;
+        } else {
+            balance = balance - amount;
+        }
+        this.banksService.update(bankId, { balance });
     }
 }
