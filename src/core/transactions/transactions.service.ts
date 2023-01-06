@@ -1,10 +1,9 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 import { BanksService } from '../banks/banks.service';
 import { WebhookKeysService } from '../webhook-keys/webhook-keys.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { GetAllTransactionDto } from './dto/get-all-transaction.dto';
 import { TransactionEntity } from './entities/transaction.entity';
 import { ITransactionKeyResult } from './interfaces/transaction-key-result.interface';
 
@@ -23,17 +22,16 @@ export class TransactionsService {
         return this.webhookKeysService.create({ bankId } as ITransactionKeyResult);
     }
 
-    async create(key: string, payload: CreateTransactionDto): Promise<void> {
+    async create(key: string, payload: CreateTransactionDto) {
         const keyResult = await this.webhookKeysService.get<ITransactionKeyResult>(key);
         if (!keyResult) throw new ConflictException('invalid key');
-        this.transactionRepository.save({ ...payload, bankId: keyResult.bankId });
+
+        payload['categories'] = payload.categoryIds.map((id) => ({ id }));
+        return this.transactionRepository.save({ bankId: keyResult.bankId, ...payload });
     }
 
-    findAll({ page, count }: GetAllTransactionDto): Promise<TransactionEntity[]> {
-        return this.transactionRepository.find({
-            take: count * page,
-            skip: count * (page - 1),
-        });
+    findAll(options?: FindManyOptions<TransactionEntity>): Promise<TransactionEntity[]> {
+        return this.transactionRepository.find(options);
     }
 
     findOne(id: string): Promise<TransactionEntity> {

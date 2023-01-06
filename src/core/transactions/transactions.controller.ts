@@ -13,19 +13,26 @@ import { TransactionEntity } from './entities/transaction.entity';
 import { GetAllTransactionDto } from './dto/get-all-transaction.dto';
 import { CreateWebhookKeyDto } from './dto/create-webhook-key.dto';
 import { ResultWebhookKeyDto } from './dto/result-webhook-key.dto';
+import { ConfigService } from '@nestjs/config';
+import { IConfig } from 'src/configs/configuration';
 
 @ApiTags('Transactions')
 @Controller('transactions')
 export class TransactionsController {
-    constructor(private readonly transactionsService: TransactionsService) {}
+    constructor(
+        private readonly transactionsService: TransactionsService,
+        private readonly config: ConfigService<IConfig>,
+    ) {}
 
     @ApiOperation({ summary: 'Create transaction webhook url' })
     @ApiNotFoundResponse({ description: 'bank with this id: "bankId" not found' })
     @ApiCreatedResponse({ type: ResultWebhookKeyDto })
     @Post('/')
     async createWebhookKey(@Body() { bankId }: CreateWebhookKeyDto) {
+        const port = this.config.get('port');
+        const apiPrefix = this.config.get('apiPrefix');
         const key = await this.transactionsService.createWebhookKey(bankId);
-        return { url: `http://127.0.0.1:Port/api/transactions/${key}` };
+        return { url: `http://127.0.0.1:${port}${apiPrefix}/transactions/${key}` };
     }
 
     @ApiOperation({ summary: 'Create transaction on webhook' })
@@ -38,10 +45,13 @@ export class TransactionsController {
     @ApiOperation({ summary: 'Get all transactions' })
     @ApiOkResponse({ type: TransactionEntity, isArray: true })
     @Get('/')
-    findAll(@Query() query: GetAllTransactionDto) {
-        query.page = query.page || 1;
-        query.count = query.count || 30;
-        return this.transactionsService.findAll(query);
+    findAll(@Query() { page, count }: GetAllTransactionDto) {
+        page = page || 1;
+        count = count || 30;
+        return this.transactionsService.findAll({
+            take: count * page,
+            skip: count * (page - 1),
+        });
     }
 
     @ApiOperation({ summary: 'Get transaction by id' })

@@ -10,5 +10,6 @@ import { BanksModule } from '../banks/banks.module';
     imports: [TypeOrmModule.forFeature([TransactionEntity]), WebhookKeysModule, BanksModule],
     controllers: [TransactionsController],
     providers: [TransactionsService],
+    exports: [TransactionsService],
 })
 export class TransactionsModule {}
