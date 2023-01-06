@@ -22,7 +22,7 @@ export class BanksService {
     }
 
     update(id: string, payload: UpdateBankDto) {
-        return this.update(id, payload);
+        return this.bankRepository.update(id, payload);
     }
 
     async remove(id: string) {

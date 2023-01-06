@@ -42,7 +42,7 @@ export class TransactionsService {
 
     async remove(id: string) {
         let { bankId, amount, type } = await this.findOne(id);
-        type === TransactionType.Profitable ? TransactionType.Consumable : TransactionType.Profitable;
+        type = type === TransactionType.Profitable ? TransactionType.Consumable : TransactionType.Profitable;
         this.changeBankBalance(bankId, amount, type);
         return this.transactionRepository.delete(id);
     }
