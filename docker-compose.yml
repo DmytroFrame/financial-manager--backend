@@ -1,0 +1,37 @@
+version: "3"
+
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: postgres
+    networks:
+      - app-network
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'root'
+      POSTGRES_DB: 'financial-manager'
+    ports:
+      - "5432:5432"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: .local/Dockerfile
+    networks:
+      - app-network
+    ports:
+      - "7000:7000"
+    environment:
+      PORT: 7000
+      API_PREFIX: '/api'
+      SWAGGER_UI_PREFIX: '/api/docs'
+      DB_URL: 'postgres://postgres:root@postgres:5432/financial-manager'
+    depends_on:
+      - postgres

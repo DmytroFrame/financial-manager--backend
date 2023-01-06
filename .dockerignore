@@ -1,0 +1,8 @@
+**
+!src
+!package*.json
+!tsconfig.json
+!tsconfig.build.json
+!nest-cli.json
+!webpack.config.js
+!.webpack/make-optional-plugin.js
