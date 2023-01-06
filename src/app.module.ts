@@ -1,16 +1,20 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import configuration from './configs/configuration';
+import typeormConfig from './configs/typeorm.config';
 import { CoreModule } from './core/core.module';
 
 @Module({
     imports: [
-        ConfigModule.forRoot(),
-        TypeOrmModule.forRoot({
-            type: 'postgres',
-            url: 'postgres://postgres:root@localhost:5432/codica-task',
-            autoLoadEntities: true,
-            synchronize: true,
+        ConfigModule.forRoot({
+            load: [configuration],
+            isGlobal: true,
+            cache: true,
+        }),
+        TypeOrmModule.forRootAsync({
+            inject: [ConfigService],
+            useFactory: typeormConfig,
         }),
         CoreModule,
     ],
