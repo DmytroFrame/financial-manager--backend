@@ -3,7 +3,7 @@ window.onload = function() {
 
   // the following lines will be replaced by docker/configurator, when it runs in a docker-container
   window.ui = SwaggerUIBundle({
-    url: "https://raw.githubusercontent.com/DmytroFrame/financial-manager--backend/main/.github/openapi.json",
+    url: "https://raw.githubusercontent.com/DmytroFrame/financial-manager--backend/main/docs/openapi.json",
     dom_id: '#swagger-ui',
     deepLinking: true,
     presets: [
